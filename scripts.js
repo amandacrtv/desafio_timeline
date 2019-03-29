@@ -1,82 +1,122 @@
-const container = document.getElementById('container'),
-      STORE     = "comprou",
-      proxyurl  = "https://cors-anywhere.herokuapp.com/",
-      url       = "https://storage.googleapis.com/dito-questions/events.json"; // site that doesn’t send Access-Control-*
+const timeline = document.getElementById('timeline'), //DOM element where will inserted the JSON contents using timeline design
+      STORE     = "comprou", //defines a store event
+      proxyurl  = "https://cors-anywhere.herokuapp.com/", //CORS proxy
+      url       = "https://storage.googleapis.com/dito-questions/events.json"; //url to get JSON data
 
 fetch(proxyurl + url) 
 .then(response => response.text())
 .then(contents => {
-  var data = JSON.parse(contents).events;
-  var stores = [];
-  var itens = [];
+  let data     = JSON.parse(contents).events, //transform text from response to JSON
+      stores   = [],
+      products = [];
+
+  //sort all events by ascending timestamp 
   data.sort((a, b) => {
     return new Date(a.timestamp).getTime() > new Date(b.timestamp).getTime() ? 1 : -1;  
   });
+
   data.forEach(event => {
-    event.custom_data = event.custom_data.reduce((obj, item) => {
-      obj[item.key] = item.value
+    //convert custom_data array to object for better data manipulation
+    event.custom_data = event.custom_data.reduce((obj, product) => {
+      obj[product.key] = product.value
       return obj
-    }, {})
+    }, {});
+
+    //organize each event by it's type into an proper array
     if (event.event == STORE) 
       stores.push(event); 
     else 
-      itens.push(event);
+      products.push(event);
   });
-  console.log(stores);
-  console.log(itens);
-  
-  stores.forEach(store => {
-    var card = document.createElement('div');
-    card.className = 'container right';
 
-    var content = document.createElement('div');
+  //create a container for each store with it's products and more information
+
+  let container, content, img, span, header, date, table, tr, th, td;
+
+  stores.forEach(store => {
+
+    //container 
+    container = document.createElement('div');
+    container.className = 'container';
+
+    //content
+    content = document.createElement('div');
     content.className = 'content';
 
-    var header = document.createElement('div');
-    
-    var calendar = document.createElement('img');
-    calendar.src = 'calendar.svg';
-    
-    var data = moment(new Date(store.timestamp));
+    //store information
+    header = document.createElement('div');
+    header.className = 'header';
 
-    var ddmmyy = document.createTextNode(data.format('DD/MM/YYYY'));
-    
-    var clock = document.createElement('img');
-    clock.src = 'clock.svg';
+    //moment object for date formatting
+    date = moment(new Date(store.timestamp));
 
-    var hhmm = document.createTextNode(data.format('HH:mm'));
+    //date 
+    img = document.createElement('img');
+    img.src = 'calendar.svg';
+    header.appendChild(img);
+    span = document.createElement('span');
+    span.textContent = date.format('DD/MM/YYYY');
+    header.appendChild(span);
 
-    var place = document.createElement('img');
-    place.src = 'place.svg';
+    //time
+    img = document.createElement('img');
+    img.src = 'clock.svg';
+    header.appendChild(img);
+    span = document.createElement('span');
+    span.textContent = date.format('HH:mm');
+    header.appendChild(span);
 
-    var name = document.createTextNode(store.custom_data.store_name);
+    //localization
+    img = document.createElement('img');
+    img.src = 'place.svg';
+    header.appendChild(img);
+    span = document.createElement('span');
+    span.textContent = store.custom_data.store_name;
+    header.appendChild(span);
 
-    var money = document.createElement('img');
-    money.src = 'money.svg';
+    //transaction value
+    img = document.createElement('img');
+    img.src = 'money.svg';  
+    header.appendChild(img);
+    span = document.createElement('span');
+    span.textContent = 'R$ ' + store.revenue.toFixed(2).replace('.', ',');
+    header.appendChild(span);
 
-    var revenue = document.createTextNode('R$ ' + store.revenue.toFixed(2).replace('.', ','));
+    //products table
+    table = document.createElement('table');
+    table.className = "products";
 
-    header.appendChild(calendar);
-    header.appendChild(ddmmyy);
-    header.appendChild(clock);
-    header.appendChild(hhmm);
-    header.appendChild(place);
-    header.appendChild(name);
-    header.appendChild(money);
-    header.appendChild(revenue);
+    //table header
+    tr = document.createElement('tr');
+    th = document.createElement('th');
+    th.appendChild(document.createTextNode('Produto'));
+    tr.appendChild(th);
+    th = document.createElement('th');
+    th.appendChild(document.createTextNode('Preço'));
+    tr.appendChild(th);
+    table.appendChild(tr);
 
-    content.appendChild(header);
-
-    card.appendChild(content);
-
-    container.appendChild(card);
-    /*
-    itens.forEach(item => {
-      if (item.custom_data.transaction_id == store.custom_data.transaction_id) {=
+    //table rows with products
+    products.forEach(product => {
+      //identify products using transaction_id from the store
+      if (product.custom_data.transaction_id == store.custom_data.transaction_id) {
+        //insert row with product data
+        tr = document.createElement('tr');
+        td = document.createElement('td');
+        td.appendChild(document.createTextNode(product.custom_data.product_name));
+        tr.appendChild(td);
+        td = document.createElement('td');
+        td.appendChild(document.createTextNode('R$ ' + product.custom_data.product_price.toFixed(2).replace('.', ',')));
+        tr.appendChild(td);
+        table.appendChild(tr);
       }
-    }); =
-    */
-  })
+    }); 
 
-})
-.catch(() => console.log("Can’t access " + url + " response. Blocked by browser?"))
+    //append all elements to the timeline div respecting hierarchy 
+    content.appendChild(header);
+    content.appendChild(table);
+    container.appendChild(content);
+    timeline.appendChild(container);
+  });
+
+}).catch((e) => console.log("An error has occurred: " + e));
