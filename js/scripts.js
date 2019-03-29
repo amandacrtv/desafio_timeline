@@ -1,4 +1,4 @@
-const timeline = document.getElementById('timeline'), //DOM element where will inserted the JSON contents using timeline design
+const timeline  = document.getElementById('timeline'), //DOM element where will inserted the JSON contents using timeline design
       STORE     = "comprou", //defines a store event
       proxyurl  = "https://cors-anywhere.herokuapp.com/", //CORS proxy
       url       = "https://storage.googleapis.com/dito-questions/events.json"; //url to get JSON data
@@ -10,9 +10,9 @@ fetch(proxyurl + url)
       stores   = [],
       products = [];
 
-  //sort all events by ascending timestamp 
+  //sort all events by descending timestamp 
   data.sort((a, b) => {
-    return new Date(a.timestamp).getTime() > new Date(b.timestamp).getTime() ? 1 : -1;  
+    return new Date(a.timestamp).getTime() < new Date(b.timestamp).getTime() ? 1 : -1;  
   });
 
   data.forEach(event => {
@@ -52,7 +52,7 @@ fetch(proxyurl + url)
 
     //date 
     img = document.createElement('img');
-    img.src = 'calendar.svg';
+    img.src = 'assets/calendar.svg';
     header.appendChild(img);
     span = document.createElement('span');
     span.textContent = date.format('DD/MM/YYYY');
@@ -60,7 +60,7 @@ fetch(proxyurl + url)
 
     //time
     img = document.createElement('img');
-    img.src = 'clock.svg';
+    img.src = 'assets/clock.svg';
     header.appendChild(img);
     span = document.createElement('span');
     span.textContent = date.format('HH:mm');
@@ -68,7 +68,7 @@ fetch(proxyurl + url)
 
     //localization
     img = document.createElement('img');
-    img.src = 'place.svg';
+    img.src = 'assets/place.svg';
     header.appendChild(img);
     span = document.createElement('span');
     span.textContent = store.custom_data.store_name;
@@ -76,7 +76,7 @@ fetch(proxyurl + url)
 
     //transaction value
     img = document.createElement('img');
-    img.src = 'money.svg';  
+    img.src = 'assets/money.svg';  
     header.appendChild(img);
     span = document.createElement('span');
     span.textContent = 'R$ ' + store.revenue.toFixed(2).replace('.', ',');
